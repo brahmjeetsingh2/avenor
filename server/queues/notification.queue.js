@@ -8,20 +8,25 @@ const getNotificationQueue = () => {
 
   const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
   const isUpstash = redisUrl.includes('upstash') || redisUrl.startsWith('rediss://');
-  
-  // Create explicit ioredis clients for Upstash reliability
-  const redisConfig = isUpstash
-    ? new IORedis(redisUrl, {
+  const redisOptions = isUpstash
+    ? {
         tls: {},
         family: 4,
         maxRetriesPerRequest: null,
         enableReadyCheck: false,
         enableOfflineQueue: true,
-      })
-    : redisUrl;
+        connectTimeout: 15000,
+      }
+    : {};
 
   notificationQueue = new Bull('notifications', {
-    redis: redisConfig,
+    createClient: (type) => {
+      const isSubscriber = type === 'subscriber';
+      return new IORedis(redisUrl, {
+        ...redisOptions,
+        ...(isSubscriber ? { maxRetriesPerRequest: null } : {}),
+      });
+    },
     defaultJobOptions: {
       attempts: 3,
       backoff: { type: 'exponential', delay: 2000 },
