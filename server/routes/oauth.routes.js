@@ -4,6 +4,7 @@ const { Strategy: GoogleStrategy } = require('passport-google-oauth20');
 const jwt      = require('jsonwebtoken');
 const User     = require('../models/User.model');
 const router   = express.Router();
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 // ─── Configure strategy (only if credentials present) ─────────────────────────
 if (process.env.GOOGLE_CLIENT_ID) {
@@ -51,7 +52,7 @@ router.get('/google',
 );
 
 router.get('/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: `${process.env.CLIENT_URL}/login?error=oauth` }),
+  passport.authenticate('google', { session: false, failureRedirect: `${CLIENT_URL}/login?error=oauth` }),
   (req, res) => {
     const user = req.user;
 
@@ -79,7 +80,7 @@ router.get('/google/callback',
     // Redirect to frontend with token in URL fragment (never in query string)
     const dashboards = { student: '/student/dashboard', coordinator: '/coordinator/dashboard', alumni: '/alumni/dashboard' };
     const dest = dashboards[user.role] || '/';
-    res.redirect(`${process.env.CLIENT_URL}/oauth-callback?token=${accessToken}&redirect=${dest}`);
+    res.redirect(`${CLIENT_URL}/oauth-callback?token=${accessToken}&redirect=${dest}`);
   }
 );
 

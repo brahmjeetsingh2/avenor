@@ -11,7 +11,17 @@ import useAuthStore from '../../store/authStore';
 import Button from '../../components/ui/Button';
 import StudentAIPrepPage from './StudentAIPrepPage';
 
-const API_BASE = '/api';
+const API_ORIGIN = import.meta.env.VITE_API_URL?.trim() || '/api';
+
+const safeReadJson = async (response) => {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { message: text };
+  }
+};
 
 /* ─── Keyframes injected once ─────────────────────────────────────────────── */
 const STYLES = `
@@ -569,8 +579,8 @@ const AIInterviewPrepPage = ({ initialTab = 'prep' }) => {
       if (controller.signal.aborted) return;
       setCompanies(Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
     }).catch(() => {});
-    fetch(`${API_BASE}/ai/rate-limit`, { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal })
-      .then(r => r.json())
+    fetch(`${API_ORIGIN}/ai/rate-limit`, { headers: { Authorization: `Bearer ${token}` }, signal: controller.signal })
+      .then(async (r) => safeReadJson(r))
       .then(d => { if (!controller.signal.aborted && d.success) setRateLimit(d.data); })
       .catch(() => {});
 
@@ -608,14 +618,17 @@ const AIInterviewPrepPage = ({ initialTab = 'prep' }) => {
     setDone(false);
 
     try {
-      const res = await fetch(`${API_BASE}/ai/interview-prep`, {
+      const res = await fetch(`${API_ORIGIN}/ai/interview-prep`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body:    JSON.stringify({ companyId, role }),
         signal:  abortRef.current.signal,
       });
 
-      if (!res.ok) { const err = await res.json(); throw new Error(err.message || 'Request failed'); }
+      if (!res.ok) {
+        const err = await safeReadJson(res);
+        throw new Error(err?.message || `Request failed (${res.status})`);
+      }
 
       const reader  = res.body.getReader();
       const decoder = new TextDecoder();
@@ -649,7 +662,7 @@ const AIInterviewPrepPage = ({ initialTab = 'prep' }) => {
               setStreaming(false);
 
               // Persist AI prep history for student progress tracking.
-              fetch(`${API_BASE}/ai/history/prep`, {
+              fetch(`${API_ORIGIN}/ai/history/prep`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',

@@ -50,6 +50,13 @@ GOOGLE_CALLBACK_URL=https://<your-render-domain>.onrender.com/api/auth/google/ca
 ATLAS_SEARCH_ENABLED=true
 ```
 
+### Step 1.3.1: Configure Google OAuth
+In Google Cloud Console → APIs & Services → Credentials, add these exact values:
+- Authorized JavaScript origin: `https://avenor.vercel.app`
+- Authorized redirect URI: `https://<your-render-domain>.onrender.com/api/auth/google/callback`
+
+Important: the redirect URI must match exactly, including `https`, domain, path, and no trailing slash.
+
 ### Step 1.4: Deploy Backend
 Click **Deploy** on Render. Wait for build to complete (~2 min).
 

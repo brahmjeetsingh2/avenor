@@ -59,7 +59,7 @@ const LoginPage = () => {
   return (
     <div className="auth-page min-h-[calc(100vh-4rem)] w-full flex overflow-x-hidden">
       {/* ── Left panel (decorative) ── */}
-      <div className="hidden lg:flex lg:w-1/2 hero-shell hero-shell--auth relative overflow-hidden bg-[linear-gradient(135deg,var(--bg),var(--surface),var(--surface-2))] items-center justify-center p-12 border-r border-[var(--color-border)] rounded-none border-0 border-r">
+      <div className="hidden lg:flex lg:w-1/2 hero-shell hero-shell--auth relative overflow-hidden bg-[linear-gradient(135deg,var(--bg),var(--surface),var(--surface-2))] items-center justify-center p-12 border-r border-[var(--color-border)] rounded-none">
         {/* Orbs */}
         <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-[80px] animate-pulse-slow bg-[rgba(120,120,120,0.12)]" />
         <div className="absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full blur-[60px] animate-pulse-slow bg-[rgba(90,90,90,0.1)]" style={{ animationDelay: '1s' }} />
