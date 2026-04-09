@@ -103,6 +103,15 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Avenor API 🚀', env: process.env.NODE_ENV, ts: new Date().toISOString() });
 });
 
+// Render and other probes may hit root with HEAD/GET.
+app.get('/', (req, res) => {
+  res.status(200).json({ success: true, message: 'Avenor API root', health: '/api/health' });
+});
+
+app.head('/', (req, res) => {
+  res.sendStatus(200);
+});
+
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/companies', require('./routes/company.routes'));
 app.use('/api/applications', require('./routes/application.routes'));
