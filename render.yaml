@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: avenor-api
+    runtime: node
+    region: singapore          # closest to India
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8000
+      # Set these manually in Render dashboard (sensitive):
+      # MONGODB_URI, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET,
+      # REDIS_URL, CLIENT_URL, EMAIL_USER, EMAIL_PASS,
+      # GROQ_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+      # GOOGLE_CALLBACK_URL, ATLAS_SEARCH_ENABLED
