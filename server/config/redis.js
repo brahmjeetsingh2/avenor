@@ -4,8 +4,13 @@ let redis;
 
 const connectRedis = () => {
   try {
-    redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-      maxRetriesPerRequest: 3,
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const isUpstash = redisUrl.includes('upstash.io') || redisUrl.startsWith('rediss://');
+
+    redis = new Redis(redisUrl, {
+      maxRetriesPerRequest: isUpstash ? null : 3,
+      enableReadyCheck: !isUpstash,
+      enableOfflineQueue: true,
       retryStrategy(times) {
         if (times > 3) {
           console.warn('⚠️  Redis unavailable, continuing without cache');
@@ -14,6 +19,7 @@ const connectRedis = () => {
         return Math.min(times * 200, 2000);
       },
       lazyConnect: true,
+      ...(isUpstash ? { tls: {}, family: 4, commandTimeout: 15000, connectTimeout: 15000 } : {}),
     });
 
     redis.on('connect', () => console.log('✅ Redis Connected'));
