@@ -106,8 +106,15 @@ const PostReferralModal = ({ isOpen, onClose, onSaved, editing }) => {
       isOpen={isOpen}
       onClose={onClose}
       title={editing ? 'Edit Referral' : 'Post Referral'}
+      variant="salary"
       size="md"
-      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button onClick={submit} loading={loading}>{editing ? 'Save Changes' : 'Post Referral'}</Button></>}
+      bodyClassName="sm:max-h-[52vh] pb-5"
+      footer={
+        <div className="flex w-full sm:w-auto sm:ml-auto flex-col-reverse sm:flex-row gap-2 sm:gap-2.5">
+          <Button variant="ghost" onClick={onClose} className="text-xs h-8 px-3 rounded-md">Cancel</Button>
+          <Button onClick={submit} loading={loading} className="text-xs h-8 px-3 btn-primary rounded-md">{editing ? 'Save Changes' : 'Post Referral'}</Button>
+        </div>
+      }
     >
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">

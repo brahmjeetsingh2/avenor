@@ -9,6 +9,9 @@ const API_ORIGIN = import.meta.env.VITE_API_URL?.trim()
   ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
   : 'http://localhost:8000';
 
+const CLIENT_ORIGIN = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+const GOOGLE_AUTH_URL = `${API_ORIGIN}/api/auth/google?client_url=${encodeURIComponent(CLIENT_ORIGIN)}`;
+
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -237,7 +240,7 @@ const LoginPage = () => {
 
           {/* Google OAuth */}
           <a
-            href={`${API_ORIGIN}/api/auth/google`}
+            href={GOOGLE_AUTH_URL}
             className="auth-google-btn w-full flex items-center justify-center gap-3 border border-[#dadce0] hover:border-[#c7c9cc] text-[#3c4043] font-semibold py-3.5 rounded-xl transition-all duration-200 text-sm bg-[#ffffff] mt-3 shadow-[0_1px_2px_rgba(60,64,67,0.15)] hover:bg-[#f8f9fa] active:scale-[0.97]"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">

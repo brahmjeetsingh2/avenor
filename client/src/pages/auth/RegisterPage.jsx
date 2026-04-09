@@ -13,6 +13,8 @@ const API_ORIGIN = import.meta.env.VITE_API_URL?.trim()
   ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
   : 'http://localhost:8000';
 
+const CLIENT_ORIGIN = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+
 /* ─── Constants ──────────────────────────────────────────────────────── */
 const ROLES = [
   {
@@ -142,7 +144,7 @@ const StepDots = ({ step }) => (
 const RegisterPage = () => {
   const navigate = useNavigate();
   const { registerUser, getDashboardPath } = useAuth();
-  const googleAuthUrl = `${API_ORIGIN}/api/auth/google`;
+  const googleAuthUrl = `${API_ORIGIN}/api/auth/google?client_url=${encodeURIComponent(CLIENT_ORIGIN)}`;
 
   const [step,        setStep]        = useState(1);
   const [form,        setForm]        = useState({

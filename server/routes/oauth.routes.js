@@ -6,6 +6,56 @@ const User     = require('../models/User.model');
 const router   = express.Router();
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
+const getOrigin = (value) => {
+  if (!value) return null;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+};
+
+const isAllowedClientUrl = (origin) => {
+  if (!origin) return false;
+  if (origin === CLIENT_URL) return true;
+  try {
+    const { protocol, hostname } = new URL(origin);
+    if (protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1')) {
+      return true;
+    }
+    return protocol === 'https:' && hostname.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
+};
+
+const resolveClientUrl = (req) => {
+  const fromQuery = getOrigin(req.query.client_url);
+  if (isAllowedClientUrl(fromQuery)) return fromQuery;
+
+  const fromReferer = getOrigin(req.get('referer'));
+  if (isAllowedClientUrl(fromReferer)) return fromReferer;
+
+  return CLIENT_URL;
+};
+
+const encodeState = (payload) => {
+  try {
+    return Buffer.from(JSON.stringify(payload)).toString('base64url');
+  } catch {
+    return '';
+  }
+};
+
+const decodeState = (state) => {
+  if (!state) return {};
+  try {
+    return JSON.parse(Buffer.from(state, 'base64url').toString('utf8'));
+  } catch {
+    return {};
+  }
+};
+
 // ─── Configure strategy (only if credentials present) ─────────────────────────
 if (process.env.GOOGLE_CLIENT_ID) {
   passport.use(new GoogleStrategy(
@@ -47,40 +97,59 @@ if (process.env.GOOGLE_CLIENT_ID) {
 }
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
-router.get('/google',
-  passport.authenticate('google', { scope: ['profile', 'email'], session: false })
-);
+router.get('/google', (req, res, next) => {
+  const clientUrl = resolveClientUrl(req);
+  const state = encodeState({ clientUrl });
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    session: false,
+    state,
+  })(req, res, next);
+});
 
 router.get('/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: `${CLIENT_URL}/login?error=oauth` }),
-  (req, res) => {
-    const user = req.user;
+  (req, res, next) => {
+    // If callback is opened directly (no code), restart OAuth flow from the proper entrypoint.
+    if (!req.query.code) {
+      return res.redirect('/api/auth/google');
+    }
+    next();
+  },
+  (req, res, next) => {
+    const state = decodeState(req.query.state);
+    const stateClient = getOrigin(state.clientUrl);
+    const redirectClient = isAllowedClientUrl(stateClient) ? stateClient : CLIENT_URL;
 
-    const accessToken  = jwt.sign(
-      { id: user._id, role: user.role, email: user.email },
-      process.env.JWT_ACCESS_SECRET,
-      { expiresIn: '15m' }
-    );
-    const refreshToken = jwt.sign(
-      { id: user._id },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: '7d' }
-    );
+    passport.authenticate('google', { session: false }, async (err, user) => {
+      if (err || !user) {
+        return res.redirect(`${redirectClient}/login?error=oauth`);
+      }
 
-    // Save refresh token
-    User.findByIdAndUpdate(user._id, { refreshToken }).catch(() => {});
+      const accessToken  = jwt.sign(
+        { id: user._id, role: user.role, email: user.email },
+        process.env.JWT_ACCESS_SECRET,
+        { expiresIn: '15m' }
+      );
+      const refreshToken = jwt.sign(
+        { id: user._id },
+        process.env.JWT_REFRESH_SECRET,
+        { expiresIn: '7d' }
+      );
 
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure:   process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      maxAge:   7 * 24 * 60 * 60 * 1000,
-    });
+      // Save refresh token
+      await User.findByIdAndUpdate(user._id, { refreshToken }).catch(() => {});
 
-    // Redirect to frontend with token in URL fragment (never in query string)
-    const dashboards = { student: '/student/dashboard', coordinator: '/coordinator/dashboard', alumni: '/alumni/dashboard' };
-    const dest = dashboards[user.role] || '/';
-    res.redirect(`${CLIENT_URL}/oauth-callback?token=${accessToken}&redirect=${dest}`);
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure:   process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        maxAge:   7 * 24 * 60 * 60 * 1000,
+      });
+
+      const dashboards = { student: '/student/dashboard', coordinator: '/coordinator/dashboard', alumni: '/alumni/dashboard' };
+      const dest = dashboards[user.role] || '/';
+      return res.redirect(`${redirectClient}/oauth-callback?token=${accessToken}&redirect=${dest}`);
+    })(req, res, next);
   }
 );
 

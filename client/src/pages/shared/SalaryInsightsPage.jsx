@@ -51,6 +51,7 @@ const SubmitSalaryModal = ({ isOpen, onClose, companies, onSubmitted }) => {
   });
   const [loading, setLoading] = useState(false);
   const [errors,  setErrors]  = useState({});
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const set     = (k, v) => { setForm(p => ({ ...p, [k]: v }));           setErrors(p => ({ ...p, [k]: '' })); };
   const setBond = (k, v) =>   setForm(p => ({ ...p, bond: { ...p.bond, [k]: v } }));
@@ -90,163 +91,160 @@ const SubmitSalaryModal = ({ isOpen, onClose, companies, onSubmitted }) => {
   return (
     <Modal
       isOpen={isOpen} onClose={onClose}
-      title="Share Salary Data" size="md"
+      title="Share Salary Data" size="lg" variant="salary"
+      bodyClassName="sm:max-h-[54vh] sm:py-3"
       footer={
-        <div className="flex items-center gap-3 w-full">
+        <div className="flex w-full sm:w-auto sm:ml-auto flex-col-reverse sm:flex-row sm:items-center gap-2 sm:gap-2.5">
           <Button variant="ghost" onClick={onClose}
-            className="flex-1 h-11 rounded-input font-semibold">
+            className="text-xs h-8 px-3 rounded-md font-semibold">
             Cancel
           </Button>
           <Button onClick={handleSubmit} loading={loading}
-            className="flex-1 h-11 btn-primary rounded-input font-semibold relative overflow-hidden group">
-            <span className="absolute inset-0 opacity-0 group-hover:opacity-100
-              bg-gradient-to-r from-transparent via-white/10 to-transparent
-              -translate-x-full group-hover:translate-x-full
-              transition-all duration-700 pointer-events-none" />
-            <Lock size={13} className="relative z-10" />
-            <span className="relative z-10">Submit Anonymously</span>
+            className="text-xs h-8 px-3 btn-primary rounded-md font-semibold flex items-center justify-center gap-1">
+            <Lock size={11} />
+            <span>Submit</span>
           </Button>
         </div>
       }
     >
-      <div className="space-y-5">
+      <div className="space-y-3">
 
-        {/* Privacy banner */}
-        <div className="flex items-start gap-3 p-3.5 rounded-xl
-          border border-[var(--success-border)]" style={{background: 'color-mix(in srgb, var(--success-bg) 50%, var(--surface) 50%)'}}>
-          <Shield size={15} className="text-[var(--success)] mt-0.5 shrink-0" />
-          <p className="text-xs font-medium text-[var(--success)] leading-relaxed">
-            Your identity is <strong>never</strong> shown. This helps your juniors negotiate better offers.
-          </p>
+        {/* Privacy banner - compact */}
+        <div className="flex items-start gap-2 p-2.5 rounded-xl border border-[var(--success-border)] bg-[color-mix(in_srgb,var(--success-bg)_40%,var(--surface)_60%)]">
+          <Shield size={12} className="text-[var(--success)] mt-0.5 flex-shrink-0" />
+          <p className="text-xs font-medium text-[var(--success)]">Anonymous & secure. Helps juniors negotiate better.</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-3 gap-y-4">
+        {/* Form grid - ultra compact */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
 
-          {/* Company */}
-          <div className="col-span-2 space-y-1.5">
+          {/* Company - full width */}
+          <div className="sm:col-span-2">
             <Label required>Company</Label>
             <div className="relative">
               <select
                 value={form.company}
                 onChange={e => set('company', e.target.value)}
-                className={`${inputCls(!!errors.company)} appearance-none pr-9`}
+                className={`${inputCls(!!errors.company)} appearance-none pr-8 text-xs h-8`}
               >
-                <option value="">— Select company —</option>
+                <option value="">Select company</option>
                 {companies.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
               </select>
-              <ChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2
-                text-[var(--text-muted)] pointer-events-none" />
+              <ChevronDown size={11} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
             </div>
-            {errors.company && (
-              <p className="text-[11px] text-[var(--danger)] font-medium">{errors.company}</p>
-            )}
+            {errors.company && <p className="text-[9px] text-[var(--danger)] mt-0.5">{errors.company}</p>}
           </div>
 
-          {/* Role */}
-          <div className="col-span-2 space-y-1.5">
-            <Label required>Role / Position</Label>
+          {/* Role - full width */}
+          <div className="sm:col-span-2">
+            <Label required>Role</Label>
             <input
               value={form.role}
               onChange={e => set('role', e.target.value)}
-              placeholder="e.g. SDE-1, Data Analyst, Consultant…"
-              className={inputCls(!!errors.role)}
+              placeholder="SDE-1, Data Analyst…"
+              className={`${inputCls(!!errors.role)} text-xs h-8`}
             />
-            {errors.role && (
-              <p className="text-[11px] text-[var(--danger)] font-medium">{errors.role}</p>
-            )}
+            {errors.role && <p className="text-[9px] text-[var(--danger)] mt-0.5">{errors.role}</p>}
           </div>
 
-          {/* Numeric fields */}
-          {[
-            { label: 'Total CTC (LPA)', key: 'ctc',          required: true, error: errors.ctc },
-            { label: 'Base Salary (LPA)', key: 'base' },
-            { label: 'Annual Bonus (LPA)', key: 'bonus' },
-            { label: 'Stock Options (LPA)', key: 'stockOptions' },
-            { label: 'Joining Bonus (LPA)', key: 'joiningBonus' },
-            { label: 'Location', key: 'location', text: true },
-          ].map(({ label, key, required, error, text }) => (
-            <div key={key} className="space-y-1.5">
-              <Label required={required}>{label}</Label>
-              <input
-                type={text ? 'text' : 'number'}
-                min={text ? undefined : 0}
-                step={text ? undefined : 0.1}
-                value={form[key]}
-                onChange={e => set(key, e.target.value)}
-                placeholder={text ? 'e.g. Bangalore' : '0.0'}
-                className={inputCls(!!error)}
-              />
-              {error && <p className="text-[11px] text-[var(--danger)] font-medium">{error}</p>}
-            </div>
-          ))}
+          {/* CTC - full width */}
+          <div className="sm:col-span-2">
+            <Label required>Total CTC (LPA)</Label>
+            <input
+              type="number"
+              min={0}
+              step={0.1}
+              value={form.ctc}
+              onChange={e => set('ctc', e.target.value)}
+              placeholder="0.0"
+              className={`${inputCls(!!errors.ctc)} text-xs h-8`}
+            />
+            {errors.ctc && <p className="text-[9px] text-[var(--danger)] mt-0.5">{errors.ctc}</p>}
+          </div>
 
-          {/* Year */}
-          <div className="space-y-1.5">
-            <Label>Year</Label>
-            <div className="relative">
-              <select
-                value={form.year}
-                onChange={e => set('year', Number(e.target.value))}
-                className="input text-sm appearance-none pr-9"
+          {/* Toggle button - compact */}
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="sm:col-span-2 py-1.5 px-3 rounded-md border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-secondary)] hover:bg-[var(--surface)] transition-colors text-[11px] font-semibold flex items-center justify-between"
+          >
+            <span>{showAdvanced ? '▼' : '▶'} Details</span>
+          </button>
+
+          {showAdvanced && (
+            <>
+              {/* Optional fields in 2x2 grid */}
+              {[
+                { label: 'Base', key: 'base', tooltip: 'Base Salary (LPA)' },
+                { label: 'Bonus', key: 'bonus', tooltip: 'Annual Bonus (LPA)' },
+                { label: 'Stock', key: 'stockOptions', tooltip: 'Stock Options (LPA)' },
+                { label: 'Joining', key: 'joiningBonus', tooltip: 'Joining Bonus (LPA)' },
+              ].map(({ label, key, tooltip }) => (
+                <div key={key} title={tooltip}>
+                  <Label>{label}</Label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.1}
+                    value={form[key]}
+                    onChange={e => set(key, e.target.value)}
+                    placeholder="0.0"
+                    className="input text-xs h-7"
+                  />
+                </div>
+              ))}
+
+              {/* Location - full width */}
+              <div className="sm:col-span-2">
+                <Label>Location</Label>
+                <input
+                  type="text"
+                  value={form.location}
+                  onChange={e => set('location', e.target.value)}
+                  placeholder="Bangalore"
+                  className="input text-xs h-7"
+                />
+              </div>
+
+              {/* Year - full width */}
+              <div className="sm:col-span-2">
+                <Label>Year</Label>
+                <div className="relative">
+                  <select
+                    value={form.year}
+                    onChange={e => set('year', Number(e.target.value))}
+                    className="input appearance-none pr-7 text-xs h-7"
+                  >
+                    {[2025,2024,2023,2022,2021].map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                  <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Bond section */}
+              <button
+                type="button"
+                onClick={() => setBond('hasBond', !form.bond.hasBond)}
+                className={`sm:col-span-2 py-1.5 px-3 rounded-md border text-xs font-semibold flex items-center gap-2 transition-all
+                  ${form.bond.hasBond ? 'border-[var(--warning)] bg-[color-mix(in_srgb,var(--warning-bg)_25%,var(--surface)_75%)]' : 'border-[var(--border)] bg-[var(--surface-2)] hover:bg-[var(--surface)]'}`}
               >
-                {[2025,2024,2023,2022,2021].map(y =>
-                  <option key={y} value={y}>{y}</option>
-                )}
-              </select>
-              <ChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2
-                text-[var(--text-muted)] pointer-events-none" />
-            </div>
-          </div>
+                <Shield size={11} />
+                <span>{form.bond.hasBond ? '✓' : '○'} Bond</span>
+              </button>
+
+              {form.bond.hasBond && (
+                <div className="sm:col-span-2 grid grid-cols-2 gap-2 animate-slide-up">
+                  <input type="number" min={0} value={form.bond.duration}
+                    onChange={e => setBond('duration', e.target.value)}
+                    placeholder="Months" className="input text-xs h-7" />
+                  <input type="number" min={0} value={form.bond.amount}
+                    onChange={e => setBond('amount', e.target.value)}
+                    placeholder="Penalty ₹L" className="input text-xs h-7" />
+                </div>
+              )}
+            </>
+          )}
         </div>
-
-        {/* Divider */}
-        <div className="h-px bg-[var(--border)]" />
-
-        {/* Bond toggle */}
-        <button
-          type="button"
-          onClick={() => setBond('hasBond', !form.bond.hasBond)}
-          className={`w-full flex items-center justify-between p-3.5 rounded-lg border-2 cursor-pointer
-            transition-all duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)]
-            ${
-              form.bond.hasBond
-                ? 'border-[var(--warning)] bg-[color-mix(in_srgb,var(--warning-bg)_50%,var(--surface)_50%)]'
-                : 'border-[var(--border)] bg-[var(--surface-2)] hover:border-[var(--border)]'
-            }`}
-        >
-          <div className="flex items-center gap-2.5">
-            <Shield size={15}
-              className={form.bond.hasBond ? 'text-[var(--warning)]' : 'text-[var(--text-muted)]'} />
-            <p className="text-sm font-semibold text-[var(--text-primary)]">
-              Has Bond / Service Agreement
-            </p>
-          </div>
-          {/* Toggle pill */}
-          <div className={`w-9 h-5 rounded-full flex items-center px-0.5 transition-colors duration-200
-            ${
-              form.bond.hasBond ? 'bg-[var(--warning)]' : 'bg-[var(--border)]'
-            }`}>
-            <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform duration-200
-              ${form.bond.hasBond ? 'translate-x-4' : 'translate-x-0'}`} />
-          </div>
-        </button>
-
-        {form.bond.hasBond && (
-          <div className="grid grid-cols-2 gap-3 animate-slide-up">
-            <div className="space-y-1.5">
-              <Label>Duration (months)</Label>
-              <input type="number" min={0} value={form.bond.duration}
-                onChange={e => setBond('duration', e.target.value)}
-                placeholder="e.g. 24" className="input text-sm" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Penalty (Lakhs)</Label>
-              <input type="number" min={0} value={form.bond.amount}
-                onChange={e => setBond('amount', e.target.value)}
-                placeholder="e.g. 2" className="input text-sm" />
-            </div>
-          </div>
-        )}
       </div>
     </Modal>
   );
@@ -415,12 +413,16 @@ const SalaryCardSkeleton = () => (
 );
 
 /* ─── Main page ──────────────────────────────────────────────────────── */
-const SalaryInsightsPage = () => {
+const SalaryInsightsPage = ({ onShareModalToggle }) => {
   const [stats,     setStats]     = useState([]);
   const [companies, setCompanies] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [year,      setYear]      = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    onShareModalToggle?.(modalOpen);
+  }, [modalOpen, onShareModalToggle]);
   const [mounted,   setMounted]   = useState(false);
   const [isDark,    setIsDark]    = useState(() => {
     if (typeof document === 'undefined') return false;

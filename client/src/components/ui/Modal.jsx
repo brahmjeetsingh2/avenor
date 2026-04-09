@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 const sizes = {
   sm: 'max-w-md',
@@ -15,6 +16,7 @@ const Modal = ({
   title,
   children,
   size = 'md',
+  variant = 'default',
   showClose = true,
   footer,
   fitContent = false,
@@ -37,53 +39,64 @@ const Modal = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in" role="dialog" aria-modal="true" aria-label={title || 'Dialog'}>
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 backdrop-blur-sm"
-        style={{ background: 'var(--overlay)' }}
-        onClick={onClose}
-      />
-      {/* Modal */}
-      <div
-        className={`
-          relative w-full ${sizes[size]} modal-shell p-0 overflow-hidden
-          animate-slide-up z-10 max-h-[calc(100vh-1rem)] sm:max-h-[90vh] flex flex-col
-        `}
-      >
+  const isSalary = variant === 'salary';
+  const overlayClass = isSalary
+    ? 'fixed inset-0 z-[1000] isolate bg-black/45 backdrop-blur-[2px] flex items-center justify-center p-2 sm:p-4 animate-fade-in overflow-hidden'
+    : 'fixed inset-0 z-[1000] isolate bg-black/40 flex items-center justify-center p-2 sm:p-4 animate-fade-in overflow-hidden';
+  const shellClass = isSalary
+    ? `w-[calc(100%-0.5rem)] sm:w-full ${sizes[size]} modal-shell rounded-2xl border border-[var(--color-border)] bg-[var(--surface)] shadow-[var(--shadow-elevated)] overflow-hidden flex flex-col max-h-[calc(100dvh-0.5rem)] sm:max-h-[calc(100vh-4rem)] animate-slide-up`
+    : `w-full ${sizes[size]} modal-shell rounded-t-3xl sm:rounded-2xl flex flex-col max-h-[100dvh] sm:max-h-[calc(100vh-4rem)] animate-slide-up`;
+  const headerClass = isSalary
+    ? 'flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-[var(--color-border)] bg-[color-mix(in_srgb,var(--surface)_86%,var(--surface-2)_14%)]'
+    : 'flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-[var(--color-border)]';
+  const closeBtnClass = isSalary
+    ? 'p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--surface-2)] ml-auto transition-colors'
+    : 'p-1 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] ml-auto transition-colors';
+  const bodyBaseClass = isSalary
+    ? `${fitContent ? 'max-h-[70vh]' : 'flex-1 min-h-0'} overflow-y-auto bg-[var(--surface)] px-5 py-4 ${bodyClassName}`
+    : `${fitContent ? 'max-h-[70vh]' : 'flex-1 min-h-0'} overflow-y-auto px-5 py-4 ${bodyClassName}`;
+  const footerClass = isSalary
+    ? 'flex-shrink-0 px-5 py-3 border-t border-[var(--color-border)] flex flex-col-reverse sm:flex-row sm:gap-2.5 gap-2 bg-[color-mix(in_srgb,var(--surface)_88%,var(--surface-2)_12%)]'
+    : 'flex-shrink-0 px-5 py-3 border-t border-[var(--color-border)] flex flex-col-reverse sm:flex-row sm:gap-2.5 gap-2 bg-[var(--surface)]';
+
+  const modalNode = (
+    <div className={overlayClass} role="dialog" aria-modal="true" aria-label={title || 'Dialog'}>
+      {/* Modal container - handles all scrolling */}
+      <div className={shellClass}>
         {/* Header */}
         {(title || showClose) && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
+          <div className={headerClass}>
             {title && (
-              <h3 className="text-lg font-bold text-[var(--color-text-primary)]">{title}</h3>
+              <h3 className="text-base font-bold tracking-tight text-[var(--color-text-primary)]">{title}</h3>
             )}
             {showClose && (
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--surface-2)] transition-colors ml-auto hover-lift dark:bg-[rgba(255,255,255,0.04)] dark:text-[var(--color-text-primary)] dark:border dark:border-[rgba(255,255,255,0.08)] dark:hover:bg-[rgba(255,255,255,0.08)]"
+                className={closeBtnClass}
                 aria-label="Close modal"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             )}
           </div>
         )}
-        {/* Body */}
-        <div
-          className={`${fitContent ? 'max-h-[70vh]' : 'flex-1 min-h-0'} overflow-y-auto overscroll-contain p-6 ${bodyClassName}`}
-        >
+        {/* Body - scrollable */}
+        <div className={bodyBaseClass}>
           {children}
         </div>
-        {/* Footer */}
+        {/* Footer - always sticky at bottom */}
         {footer && (
-          <div className="shrink-0 px-6 py-4 border-t border-[var(--color-border)] flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
+          <div className={footerClass}>
             {footer}
           </div>
         )}
       </div>
     </div>
   );
+
+  if (typeof document === 'undefined') return modalNode;
+
+  return createPortal(modalNode, document.body);
 };
 
 export default Modal;

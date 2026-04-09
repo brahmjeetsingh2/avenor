@@ -56,29 +56,25 @@ const EditSalaryModal = ({ open, onClose, row, onSaved }) => {
       isOpen={open}
       onClose={onClose}
       title="Edit Salary Contribution"
-      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button onClick={save} loading={loading}>Save</Button></>}
+      variant="salary"
+      size="md"
+      bodyClassName="sm:max-h-[46vh] pb-5"
+      footer={
+        <div className="flex w-full sm:w-auto sm:ml-auto flex-col-reverse sm:flex-row gap-2 sm:gap-2.5">
+          <Button variant="ghost" onClick={onClose} className="text-xs h-8 px-3 rounded-md">Cancel</Button>
+          <Button onClick={save} loading={loading} className="text-xs h-8 px-3 btn-primary rounded-md">Save</Button>
+        </div>
+      }
     >
-      <div className="grid grid-cols-2 gap-3">
-        <div className="col-span-2">
-          <label className="text-xs font-semibold">Role</label>
-          <input className="input" value={form.role} onChange={(e) => set('role', e.target.value)} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="sm:col-span-2">
+          <label className="text-[10px] font-semibold uppercase">Role</label>
+          <input className="input text-xs h-7" value={form.role} onChange={(e) => set('role', e.target.value)} />
         </div>
-        <div>
-          <label className="text-xs font-semibold">CTC</label>
-          <input className="input" type="number" value={form.ctc} onChange={(e) => set('ctc', e.target.value)} />
-        </div>
-        <div>
-          <label className="text-xs font-semibold">Year</label>
-          <input className="input" type="number" value={form.year} onChange={(e) => set('year', Number(e.target.value))} />
-        </div>
-        <div>
-          <label className="text-xs font-semibold">Base</label>
-          <input className="input" type="number" value={form.base} onChange={(e) => set('base', e.target.value)} />
-        </div>
-        <div>
-          <label className="text-xs font-semibold">Bonus</label>
-          <input className="input" type="number" value={form.bonus} onChange={(e) => set('bonus', e.target.value)} />
-        </div>
+        <input type="number" placeholder="CTC" className="input text-xs h-7" value={form.ctc} onChange={(e) => set('ctc', e.target.value)} />
+        <input type="number" placeholder="Year" className="input text-xs h-7" value={form.year} onChange={(e) => set('year', Number(e.target.value))} />
+        <input type="number" placeholder="Base" className="input text-xs h-7" value={form.base} onChange={(e) => set('base', e.target.value)} />
+        <input type="number" placeholder="Bonus" className="input text-xs h-7" value={form.bonus} onChange={(e) => set('bonus', e.target.value)} />
       </div>
     </Modal>
   );
@@ -89,6 +85,7 @@ const AlumniSalaryContributionsPage = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
+  const [isShareSalaryModalOpen, setIsShareSalaryModalOpen] = useState(false);
 
   const fetchMine = async () => {
     setLoading(true);
@@ -123,18 +120,18 @@ const AlumniSalaryContributionsPage = () => {
 
   return (
     <div className="page-enter">
-      <div className="max-w-[1360px] mx-auto overflow-x-hidden p-4 md:p-6 space-y-5">
-        <div className="hero-shell hero-shell--alumni p-5">
-          <h1 className="font-display text-2xl font-bold text-[var(--color-text-primary)]">Salary Insights</h1>
-          <p className="text-sm text-[var(--color-text-muted)] mt-1">Your contributions are private to your account and editable anytime.</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button onClick={() => setTab('mine')} className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all w-full sm:w-auto border ${tab === 'mine' ? 'bg-coral-500 text-white border-transparent shadow-[0_14px_32px_-24px_rgba(233,95,88,.9)]' : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] dark:bg-[rgba(255,255,255,0.04)] dark:border-[rgba(255,255,255,0.1)] dark:text-[var(--color-text-primary)] dark:hover:bg-[rgba(255,255,255,0.08)]'}`}>My Salary Contributions</button>
-            <button onClick={() => setTab('insights')} className={`px-3 py-2 rounded-xl text-sm font-semibold transition-all w-full sm:w-auto border ${tab === 'insights' ? 'bg-coral-500 text-white border-transparent shadow-[0_14px_32px_-24px_rgba(233,95,88,.9)]' : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] dark:bg-[rgba(255,255,255,0.04)] dark:border-[rgba(255,255,255,0.1)] dark:text-[var(--color-text-primary)] dark:hover:bg-[rgba(255,255,255,0.08)]'}`}>Browse Salary Insights</button>
+      <div className="max-w-[1360px] mx-auto overflow-x-hidden p-4 md:p-6 space-y-3">
+        <div className={`hero-shell hero-shell--alumni p-3.5 md:p-4 transition-all duration-250 ${tab === 'insights' && isShareSalaryModalOpen ? 'opacity-[0.55] blur-[0.8px] pointer-events-none' : 'opacity-100 blur-0'}`}>
+          <h1 className="font-display text-xl md:text-2xl font-bold text-[var(--color-text-primary)]">Salary Insights</h1>
+          <p className="text-xs md:text-sm text-[var(--color-text-muted)] mt-0.5">Your contributions are private to your account and editable anytime.</p>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button onClick={() => setTab('mine')} className={`px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all w-full border ${tab === 'mine' ? 'bg-coral-500 text-white border-transparent shadow-[0_12px_24px_-20px_rgba(233,95,88,.9)]' : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] dark:bg-[rgba(255,255,255,0.04)] dark:border-[rgba(255,255,255,0.1)] dark:text-[var(--color-text-primary)] dark:hover:bg-[rgba(255,255,255,0.08)]'}`}>My Salary Contributions</button>
+            <button onClick={() => setTab('insights')} className={`px-3 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all w-full border ${tab === 'insights' ? 'bg-coral-500 text-white border-transparent shadow-[0_12px_24px_-20px_rgba(233,95,88,.9)]' : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] dark:bg-[rgba(255,255,255,0.04)] dark:border-[rgba(255,255,255,0.1)] dark:text-[var(--color-text-primary)] dark:hover:bg-[rgba(255,255,255,0.08)]'}`}>Browse Salary Insights</button>
           </div>
         </div>
 
         {tab === 'insights' ? (
-          <SalaryInsightsPage />
+          <SalaryInsightsPage onShareModalToggle={setIsShareSalaryModalOpen} />
         ) : (
           <div className="space-y-4">
             <div className="grid sm:grid-cols-3 gap-3">

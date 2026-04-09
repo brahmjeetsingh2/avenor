@@ -132,7 +132,9 @@ api.interceptors.request.use(
     try {
       const auth = JSON.parse(localStorage.getItem('avenor-auth') || '{}');
       const token = auth?.state?.token;
-      if (token) {
+      const hasAuthHeader = Boolean(config.headers?.Authorization || config.headers?.authorization);
+      // Keep explicitly provided auth headers (OAuth callback) and only inject stored token otherwise.
+      if (token && !hasAuthHeader) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch {}

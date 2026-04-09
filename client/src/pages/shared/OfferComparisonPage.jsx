@@ -166,11 +166,10 @@ const AddOfferModal = ({ isOpen, onClose, companies, onAdded }) => {
   return (
     <Modal
       isOpen={isOpen} onClose={onClose}
-      title="Add Offer" size="md"
-      fitContent
-      bodyClassName="pt-4 pb-5"
+      title="Add Offer" size="md" variant="salary"
+      bodyClassName="pt-4 pb-6 sm:max-h-[50vh]"
       footer={
-        <div className="flex gap-3 w-full">
+        <div className="flex gap-3 w-full sm:w-auto sm:ml-auto">
           <Button variant="secondary" onClick={onClose}
             className="flex-1 h-11 rounded-input font-semibold border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
             Cancel
