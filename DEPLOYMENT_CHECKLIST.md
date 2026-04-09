@@ -9,10 +9,13 @@
 ### Step 1.1: Push to GitHub
 ```bash
 cd /Users/brahmjeetsingh/Downloads/avenor
+git status
 git add .
 git commit -m "Deploy: remove security advisories, fix env docs"
-git push origin main
+git push -u origin main
 ```
+
+Note: `server/.env` is ignored by Git and should stay local. Put secrets only in Render/Vercel environment variables.
 
 ### Step 1.2: Create Render Web Service
 1. Go to [render.com](https://render.com)

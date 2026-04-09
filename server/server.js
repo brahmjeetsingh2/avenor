@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
+const passport = require('passport');
 
 const connectDB = require('./config/db');
 const { connectRedis } = require('./config/redis');
@@ -46,9 +47,20 @@ const allowedOrigins = [
   'http://localhost:4173',
 ].filter(Boolean);
 
+const isAllowedVercelPreview = (origin) => {
+  try {
+    const { hostname, protocol } = new URL(origin);
+    return protocol === 'https:' && hostname.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
+};
+
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    if (!origin || allowedOrigins.includes(origin) || isAllowedVercelPreview(origin)) {
+      return cb(null, true);
+    }
     cb(new Error(`CORS blocked: ${origin}`));
   },
   credentials: true,
@@ -75,6 +87,7 @@ app.use('/api/auth/register', authLimiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+app.use(passport.initialize());
 app.use(morgan(isProd ? 'combined' : 'dev'));
 app.set('trust proxy', 1);
 
@@ -105,7 +118,7 @@ app.use('/api/ai', require('./routes/ai.routes'));
 app.use('/api/coordinator', require('./routes/coordinator.routes'));
 app.use('/api/search', require('./routes/search.routes'));
 
-if (process.env.GOOGLE_CLIENT_ID) {
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_CALLBACK_URL) {
   app.use('/api/auth', require('./routes/oauth.routes'));
 }
 

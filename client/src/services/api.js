@@ -118,8 +118,10 @@
 
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL?.trim() || '/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   withCredentials: true, // needed for httpOnly refresh token cookie
   timeout: 15000,
 });

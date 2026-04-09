@@ -9,6 +9,10 @@ import toast from 'react-hot-toast';
 import useAuth from '../../hooks/useAuth';
 import BrandLogo from '../../components/shared/BrandLogo';
 
+const API_ORIGIN = import.meta.env.VITE_API_URL?.trim()
+  ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
+  : 'http://localhost:8000';
+
 /* ─── Constants ──────────────────────────────────────────────────────── */
 const ROLES = [
   {
@@ -138,7 +142,7 @@ const StepDots = ({ step }) => (
 const RegisterPage = () => {
   const navigate = useNavigate();
   const { registerUser, getDashboardPath } = useAuth();
-  const googleAuthUrl = `${import.meta.env.VITE_API_URL?.replace('/api','') || 'http://localhost:8000'}/api/auth/google`;
+  const googleAuthUrl = `${API_ORIGIN}/api/auth/google`;
 
   const [step,        setStep]        = useState(1);
   const [form,        setForm]        = useState({
