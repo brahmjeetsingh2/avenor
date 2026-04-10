@@ -41,6 +41,7 @@ JWT_ACCESS_SECRET=<generate: node -e "console.log(require('crypto').randomBytes(
 JWT_REFRESH_SECRET=<generate: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))">
 REDIS_URL=rediss://<upstash-redis-url>
 CLIENT_URL=https://avenor.vercel.app
+CLIENT_URLS=https://avenor-seven.vercel.app,https://www.avenor1.tech
 EMAIL_USER=<your-gmail>
 EMAIL_PASS=<gmail-app-password>
 GROQ_API_KEY=<from console.groq.com>
@@ -53,6 +54,7 @@ ATLAS_SEARCH_ENABLED=true
 ### Step 1.3.1: Configure Google OAuth
 In Google Cloud Console → APIs & Services → Credentials, add these exact values:
 - Authorized JavaScript origin: `https://avenor.vercel.app`
+- Authorized JavaScript origin: `https://www.avenor1.tech`
 - Authorized redirect URI: `https://<your-render-domain>.onrender.com/api/auth/google/callback`
 
 Important: the redirect URI must match exactly, including `https`, domain, path, and no trailing slash.

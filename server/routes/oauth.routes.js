@@ -6,7 +6,7 @@ const User     = require('../models/User.model');
 const router   = express.Router();
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
-const getOrigin = (value) => {
+const toOrigin = (value) => {
   if (!value) return null;
   try {
     return new URL(value).origin;
@@ -15,11 +15,27 @@ const getOrigin = (value) => {
   }
 };
 
+const parseClientOrigins = () => {
+  const fromCsv = (process.env.CLIENT_URLS || '')
+    .split(',')
+    .map((item) => toOrigin(item.trim()))
+    .filter(Boolean);
+  const fromSingle = toOrigin(process.env.CLIENT_URL) || toOrigin(CLIENT_URL);
+  return Array.from(new Set([fromSingle, ...fromCsv].filter(Boolean)));
+};
+
+const configuredClientOrigins = parseClientOrigins();
+
+const getOrigin = (value) => {
+  return toOrigin(value);
+};
+
 const isAllowedClientUrl = (origin) => {
-  if (!origin) return false;
-  if (origin === CLIENT_URL) return true;
+  const normalizedOrigin = toOrigin(origin);
+  if (!normalizedOrigin) return false;
+  if (configuredClientOrigins.includes(normalizedOrigin)) return true;
   try {
-    const { protocol, hostname } = new URL(origin);
+    const { protocol, hostname } = new URL(normalizedOrigin);
     if (protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1')) {
       return true;
     }
@@ -36,7 +52,7 @@ const resolveClientUrl = (req) => {
   const fromReferer = getOrigin(req.get('referer'));
   if (isAllowedClientUrl(fromReferer)) return fromReferer;
 
-  return CLIENT_URL;
+  return configuredClientOrigins[0] || CLIENT_URL;
 };
 
 const encodeState = (payload) => {
@@ -118,7 +134,9 @@ router.get('/google/callback',
   (req, res, next) => {
     const state = decodeState(req.query.state);
     const stateClient = getOrigin(state.clientUrl);
-    const redirectClient = isAllowedClientUrl(stateClient) ? stateClient : CLIENT_URL;
+    const redirectClient = isAllowedClientUrl(stateClient)
+      ? stateClient
+      : (configuredClientOrigins[0] || CLIENT_URL);
 
     passport.authenticate('google', { session: false }, async (err, user) => {
       if (err || !user) {

@@ -18,6 +18,26 @@ const app = express();
 const httpServer = http.createServer(app);
 const isProd = process.env.NODE_ENV === 'production';
 
+const toOrigin = (value) => {
+  if (!value) return null;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+};
+
+const parseClientOrigins = () => {
+  const fromCsv = (process.env.CLIENT_URLS || '')
+    .split(',')
+    .map((item) => toOrigin(item.trim()))
+    .filter(Boolean);
+  const fromSingle = toOrigin(process.env.CLIENT_URL);
+  return Array.from(new Set([fromSingle, ...fromCsv].filter(Boolean)));
+};
+
+const configuredClientOrigins = parseClientOrigins();
+
 connectDB();
 connectRedis();
 initSocket(httpServer);
@@ -31,7 +51,7 @@ app.use(helmet({
           scriptSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", 'data:', 'https:'],
-          connectSrc: ["'self'", process.env.CLIENT_URL || ''],
+          connectSrc: ["'self'", ...configuredClientOrigins],
           fontSrc: ["'self'", 'https://fonts.gstatic.com'],
           objectSrc: ["'none'"],
           upgradeInsecureRequests: [],
@@ -42,10 +62,10 @@ app.use(helmet({
 }));
 
 const allowedOrigins = [
-  process.env.CLIENT_URL,
+  ...configuredClientOrigins,
   'http://localhost:5173',
   'http://localhost:4173',
-].filter(Boolean);
+].map(toOrigin).filter(Boolean);
 
 const isAllowedVercelPreview = (origin) => {
   try {
@@ -58,7 +78,8 @@ const isAllowedVercelPreview = (origin) => {
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin) || isAllowedVercelPreview(origin)) {
+    const normalizedOrigin = toOrigin(origin);
+    if (!origin || allowedOrigins.includes(normalizedOrigin) || isAllowedVercelPreview(normalizedOrigin)) {
       return cb(null, true);
     }
     cb(new Error(`CORS blocked: ${origin}`));
